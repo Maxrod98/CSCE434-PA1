@@ -6,6 +6,7 @@ public class LexicalAnalyzer {
 	private int position = 0;
 	private HashMap<String, Token> table;
 	private boolean done = false;
+	public int lineNum = 1;
 
 	public LexicalAnalyzer(String code, HashMap<String, Token> table) {
 		this.code = code;
@@ -19,9 +20,9 @@ public class LexicalAnalyzer {
 	public Token getNextToken() {
 
 		Token nextToken = null;
-		checkForWhitespace();
+		this.ignoreWhitespace();
 
-		nextToken = tryGettingNum();
+		nextToken = this.tryGettingNum();
 		if (nextToken != null)
 			return nextToken;
 
@@ -33,10 +34,16 @@ public class LexicalAnalyzer {
 		if (nextToken != null)
 			return nextToken;
 
+		if (nextToken == null) return this.getNextToken();
+		
 		return nextToken;
 	}
 
-	public void checkForWhitespace() {
+	public void ignoreWhitespace() {
+		if (String.valueOf(peek()).matches("\n")) {
+			lineNum++;
+		}
+		
 		if (peek() <= ' ')
 			position++;
 	}
@@ -49,7 +56,9 @@ public class LexicalAnalyzer {
 			}
 		}
 
-		if (peek() == ';' || peek() == '+' || peek() == '-' || peek() == '*' || peek() == '^') {
+		if (peek() == ';' || peek() == '+' 
+				|| peek() == '-' || peek() == '*' 
+				|| peek() == '^' || peek() == '(' || peek() == ')') {
 			Token operator = new Token(String.valueOf(peek()), null);
 			this.getNextChar();
 			return operator;
@@ -98,7 +107,7 @@ public class LexicalAnalyzer {
 			int v = 0;
 			do {
 				v = v * 10 + Integer.parseInt(String.valueOf(peek()));
-				getNextChar();
+				this.getNextChar();
 			} while (peekHoldsDigit());
 
 			return new Token(Type.NUM, v);
@@ -114,10 +123,13 @@ public class LexicalAnalyzer {
 		if (position >= code.length() && !done) {
 			throw new RuntimeException("No end identifier at the end of the code!");
 		}
+		
 		return code.charAt(position);
 	}
 
 	public char getNextChar() {
+
+		
 		position++;
 		return code.charAt(position);
 	}

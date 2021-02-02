@@ -24,6 +24,8 @@ public class Driver {
 		while (!la.isDone()) {
 			System.out.println(la.getNextToken());
 		}
+		
+		System.out.println(la.lineNum);
 	}
 
 }
