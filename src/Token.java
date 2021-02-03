@@ -13,6 +13,14 @@ public class Token {
 		return "{ Token: " + token + ", attribute: " + attribute + "}";
 	}
 	
+	
+	public String getToken(){
+		return token;
+	}
+	
+	public Object getAttribute() {
+		return attribute;
+	}
 
 }
 

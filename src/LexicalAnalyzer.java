@@ -1,3 +1,4 @@
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Hashtable;
 
@@ -6,7 +7,7 @@ public class LexicalAnalyzer {
 	private int position = 0;
 	private HashMap<String, Token> table;
 	private boolean done = false;
-	public int lineNum = 1;
+	private int lineNum = 1;
 
 	public LexicalAnalyzer(String code, HashMap<String, Token> table) {
 		this.code = code;
@@ -15,6 +16,14 @@ public class LexicalAnalyzer {
 	
 	public boolean isDone() {
 		return done;
+	}
+	
+	public String getLineAt(int line){
+		return code.split("\n")[line - 1];
+	}
+	
+	public int getLineNum() {
+		return lineNum;
 	}
 
 	public Token getNextToken() {
@@ -25,7 +34,7 @@ public class LexicalAnalyzer {
 		nextToken = this.tryGettingNum();
 		if (nextToken != null)
 			return nextToken;
-
+		
 		nextToken = this.tryGettingIdentifier();
 		if (nextToken != null)
 			return nextToken;
@@ -34,21 +43,26 @@ public class LexicalAnalyzer {
 		if (nextToken != null)
 			return nextToken;
 
-		if (nextToken == null) return this.getNextToken();
-		
-		return nextToken;
+		//if still has an error
+		if (nextToken == null) {
+			System.out.println("Error at line : " + lineNum + " Ignoring symbol :" + String.valueOf(peek()));
+			this.getNextChar();
+			return this.getNextToken();
+		}
+		return null;
 	}
 
-	public void ignoreWhitespace() {
-		if (String.valueOf(peek()).matches("\n")) {
-			lineNum++;
+	private void ignoreWhitespace() {
+		while ((peek() <= ' ')) {
+			if (String.valueOf(peek()).matches("\n")) {
+				lineNum++;
+			}
+			this.getNextChar();
 		}
 		
-		if (peek() <= ' ')
-			position++;
 	}
 
-	public Token tryGettingOpSymbol() {
+	private Token tryGettingOpSymbol() {
 		if (peek() == ':') {
 			if (this.getNextChar() == '=') {
 				this.getNextChar();
@@ -69,7 +83,7 @@ public class LexicalAnalyzer {
 
 	// ********ID PARSING
 
-	public Token tryGettingIdentifier() {
+	private Token tryGettingIdentifier() {
 		if (peekHoldsLetter()) {
 			String s = "";
 			while (this.peekHoldsLetter() || this.peekHoldsDigit()) {
@@ -97,12 +111,12 @@ public class LexicalAnalyzer {
 		return null;
 	}
 
-	public boolean peekHoldsLetter() {
+	private boolean peekHoldsLetter() {
 		return String.valueOf(peek()).matches("[a-zA-Z]");
 	}
 
 	// ******NUMERIC PARSING
-	public Token tryGettingNum() {
+	private Token tryGettingNum() {
 		if (peekHoldsDigit()) {
 			int v = 0;
 			do {
@@ -115,11 +129,11 @@ public class LexicalAnalyzer {
 		return null;
 	}
 
-	public boolean peekHoldsDigit() {
+	private boolean peekHoldsDigit() {
 		return peek() >= '0' && peek() <= '9';
 	}
 
-	public char peek() {
+	private char peek() {
 		if (position >= code.length() && !done) {
 			throw new RuntimeException("No end identifier at the end of the code!");
 		}
@@ -127,11 +141,8 @@ public class LexicalAnalyzer {
 		return code.charAt(position);
 	}
 
-	public char getNextChar() {
-
-		
+	private char getNextChar() {
 		position++;
 		return code.charAt(position);
 	}
-
 }

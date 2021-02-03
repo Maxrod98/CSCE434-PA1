@@ -19,13 +19,10 @@ public class Driver {
 		table.put("div", new Token("div", null));
 		table.put("mod", new Token("mod", null));
 		
-		LexicalAnalyzer la = new LexicalAnalyzer(code, table);
+		RecursiveParser rp = new RecursiveParser(code, table);
 		
-		while (!la.isDone()) {
-			System.out.println(la.getNextToken());
-		}
+		rp.parse();
 		
-		System.out.println(la.lineNum);
 	}
 
 }
