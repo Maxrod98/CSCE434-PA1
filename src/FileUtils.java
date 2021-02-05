@@ -4,9 +4,8 @@ import java.util.Scanner;
 
 
 public class FileUtils {
-	public static String readFile(String filePath) {
+	public static String readFileToString(String filePath) throws FileNotFoundException {
 		String result = "";
-		try {
 		      File myObj = new File(filePath);
 		      Scanner myReader = new Scanner(myObj);
 		      while (myReader.hasNextLine()) {
@@ -14,10 +13,8 @@ public class FileUtils {
 		        result += data + '\n';
 		      }
 		      myReader.close();
-		    } catch (FileNotFoundException e) {
-		      System.out.println("An error occurred.");
-		      e.printStackTrace();
-		    }
+		     
+		      
 		
 		return result;
 	}

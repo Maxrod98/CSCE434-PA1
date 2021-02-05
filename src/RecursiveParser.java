@@ -1,3 +1,4 @@
+import java.awt.SystemColor;
 import java.util.HashMap;
 
 /*
@@ -11,28 +12,33 @@ Grammar:
 <P> -> + <term> <P> | - <term> <P> | e
 <term> -> <factor> <Q>
 <Q> -> * <factor> <Q> | div <factor> <Q> | mod <factor> <Q> | e
-<factor> -> <primary> <S>
-<S> -> ^ <factor> <S> | e
+<factor> -> <primary> <T>
+<T> -> ^ <factor> | e
 <primary> -> <id> | <num> | ( < expr > )
-
  */
 
 public class RecursiveParser {
 	LexicalAnalyzer la = null;
 	Token lookAhead = null;
+	String abstractMachineCode = "";
+	Listener listener = null;
 
-	public RecursiveParser(String code, HashMap<String, Token> table) {
+	public RecursiveParser(String code, HashMap<String, Token> table, Listener listener) {
+		this.listener = listener;
 		la = new LexicalAnalyzer(code, table);
 	}
 
 	public void parse() {
-		lookAhead = la.getNextToken();
+		lookAhead = la.pop();
+		program();
 	}
 
 	private void program() {
 		switch (lookAhead.getToken()) {
-			case ("begin"): {
-				match("begin"); stmt_list(); match("end");
+			case (TokenType.BEGIN): {
+				match(TokenType.BEGIN); stmt_list(); exec(InstructionType.HALT); 
+				listener.onFinished(abstractMachineCode);
+				match(TokenType.END);
 				break;
 			}
 			default: {
@@ -42,18 +48,20 @@ public class RecursiveParser {
 	}
 	
 	private void stmt() {
-		if (lookAhead.getToken() == "id") {
-			match("id"); match(":="); expr();
+		if (lookAhead.getToken().equals(TokenType.ID)) {
+			exec(InstructionType.LVALUE + " " + lookAhead.getAttribute());
+			match(TokenType.ID); match(TokenType.ASSIGNMENT); expr();
 		}
+		exec("STO");
 	}
 
 	private void stmt_list() {
-		stmt(); R();
+		stmt();  R();
 	}
 
 	private void R() {
-		if (lookAhead.getToken() == ";") {
-			match(";"); stmt(); R();
+		if (lookAhead.getToken().equals(TokenType.SEMICOLON)) {
+			match(TokenType.SEMICOLON); stmt(); R();
 		}
 	}
 
@@ -63,11 +71,14 @@ public class RecursiveParser {
 
 	private void P() {
 		switch(lookAhead.getToken()) {
-		case("+"):{
-			match("+"); term(); P();
+		case(TokenType.SUM):{
+			match(TokenType.SUM);  term(); exec(InstructionType.ADD); P(); 
+			break;
 		}
-		case ("-"): {
-			match("-"); term(); P();
+		
+		case (TokenType.MINUS): {
+			match(TokenType.MINUS);  term(); exec(InstructionType.SUB); P(); 
+			break;
 		}
 		}
 	}
@@ -78,28 +89,75 @@ public class RecursiveParser {
 	
 	private void Q() {
 		switch(lookAhead.getToken()) {
-		case("*"):{
-			match("*"); factor(); Q();
+		case(TokenType.MULTIPLY):{
+			match(TokenType.MULTIPLY); factor();  exec(InstructionType.MPY); Q(); 
+			break;
 		}
-		case ("div"): {
-			match("div"); factor(); Q();
+		case (TokenType.DIVISION): {
+			match(TokenType.DIVISION); factor(); exec(InstructionType.DIV); Q(); 
+			break;
 		}
-		case ("mod"): {
-			match("mod"); factor(); Q();
+		case (TokenType.MODULUS): {
+			match(TokenType.MODULUS); factor(); exec(InstructionType.MOD); Q(); 
+			break;
 		}
 		}
 	}
 	
 	private void factor() {
-		
+		primary(); T();
 	}
-
-	private void match(String terminal) {
-		if (this.lookAhead.getToken() == terminal) {
-			this.lookAhead = la.getNextToken();
-		} else {
-			System.out.println("Syntax error at line: " + la.getLineNum());
+	
+	private void T() {
+		if (lookAhead.getToken().equals(TokenType.EXPONENT)) {
+			match(TokenType.EXPONENT); factor();
+			exec(InstructionType.POW);
 		}
 	}
 
+	private void primary() {
+		String name = String.valueOf(lookAhead.getAttribute());
+		switch (lookAhead.getToken()) {
+		case(TokenType.ID): {
+			match(TokenType.ID);
+			exec( InstructionType.RVALUE +  " " + name);
+		break;
+		}
+		
+		case(TokenType.NUM): {
+			match(TokenType.NUM);
+			exec(InstructionType.PUSH + " " +  name);
+		break;
+		}
+		
+		case (TokenType.START_PARENTHESES):{
+			match(TokenType.START_PARENTHESES); expr(); match(TokenType.END_PARENTHESES);
+		break;
+		}
+		
+		default: {
+			System.out.println("Error at line: " + la.getLineNum());
+		}
+		}
+	}
+	
+	public void exec(String exec) {
+		abstractMachineCode += exec + "\n";
+	}
+
+	private void match(String terminal) {
+		if (this.lookAhead.getToken().equals(terminal)) {
+			this.lookAhead = la.pop();
+		} else {
+			System.out.println(
+					"Syntax error at line: " + la.getLineNum() + ", " 
+					+ " Expected expression: " + terminal +  ", " +
+					" Expression found: " + (lookAhead.getAttribute() == null ? lookAhead.getToken() : lookAhead.getAttribute()));
+		}
+	}
+
+	public interface Listener {
+		void onFinished(String abstractMachineInstr);
+	}
+	
 }

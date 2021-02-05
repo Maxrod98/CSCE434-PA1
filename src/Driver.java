@@ -1,17 +1,22 @@
+import java.io.FileNotFoundException;
 import java.util.HashMap;
 
 public class Driver {
-	//TODO: create lexeme class 
-	//TODO: create LexicalAnalyzer
-	//TODO: more on will be discussed later
-	
+
 	
 	public static void main(String[] args) {
-		String code = FileUtils.readFile("C:\\Users\\Admin\\Documents\\TestFolder\\test.txt");
+		if (args.length < 1) {
+			System.out.println("Usage: file_location" );
+			return;
+		}
 		
-		
-		
-		Token current = null;
+		String code = null;
+		try {
+			code = FileUtils.readFileToString(args[0]);
+		} catch (FileNotFoundException e) {
+			System.out.println("File not found at: " + args[0]);
+			return;
+		}
 		
 		HashMap<String, Token> table = new HashMap<String, Token>();
 		table.put("begin", new Token("begin", null));
@@ -19,10 +24,14 @@ public class Driver {
 		table.put("div", new Token("div", null));
 		table.put("mod", new Token("mod", null));
 		
-		RecursiveParser rp = new RecursiveParser(code, table);
+		RecursiveParser rp = new RecursiveParser(code, table, new RecursiveParser.Listener() {
+			@Override
+			public void onFinished(String abstractMachineInstr) {
+				System.out.println(abstractMachineInstr);
+			}
+		});
 		
 		rp.parse();
-		
 	}
 
 }
