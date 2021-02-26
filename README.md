@@ -1,7 +1,7 @@
 # CSCE434-PA1
 Recursive Parser compiler implementation
 
-This program translates a Pascal like syntax into abstract stack machine code.
+This program translates a Pascal like syntax into abstract stack machine code. For now, the program can only intepret integers and it is still working only for arithmetic operations.
 
 Usage: in the command line arguments include only the source file location and the abstract stack machine code will be shown in the stdout.
 
