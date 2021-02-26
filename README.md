@@ -3,7 +3,7 @@ Recursive Parser compiler implementation
 
 This program translates a Pascal like syntax into abstract stack machine code. For now, the program can only intepret integers and it is still working only for arithmetic operations.
 
-Usage: in the command line arguments include only the source file location and the abstract stack machine code will be outputed in the stdout.
+Usage: Start the program, it will ask you for the location of your code. Once the translation is finished, it will output everything into stdout.
 
 Example usage, this is what is found in file TestPgm.txt: 
 
